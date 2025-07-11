@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package controller;
+
+option go_package = "github.com/AbhiK57/lazy-ncl/proto/controller";
+
+//request to get the list of active NCL peers.
+message GetPeerListRequest {}
+
+//response containing the list of NCL peer addresses.
+message GetPeerListResponse {
+  repeated string peer_addresses = 1;
+}
+
+//the controller service manages the cluster's configuration.
+service Controller {
+  //returns the current list of active NCL peer addresses.
+  rpc GetPeerList(GetPeerListRequest) returns (GetPeerListResponse);
+}

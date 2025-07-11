@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package datashard;
+
+option go_package = "github.com/AbhiK57/Lazy-NCL/proto/datashard";
+
+message PutDataRequest {
+    string record_id = 1;
+    bytes data_payload = 2;
+}
+
+//response for successful data put
+message PutDataResponse{}
+
+//request to receive data payload
+message GetDataRequest{
+    string record_id = 1;
+}
+
+//response containing payload
+message GetDataResponse {
+    bytes data_payload = 1;
+}
+
+service DataShard {
+  // Stores a data payload, indexed by its record_id.
+  rpc PutData(PutDataRequest) returns (PutDataResponse);
+
+  // Retrieves a data payload by its record_id.
+  rpc GetData(GetDataRequest) returns (GetDataResponse);
+}
