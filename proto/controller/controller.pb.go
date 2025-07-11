@@ -7,11 +7,12 @@
 package controller
 
 import (
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
+
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 )
 
 const (
@@ -114,7 +115,7 @@ const file_proto_controller_proto_rawDesc = "" +
 	"\x0epeer_addresses\x18\x01 \x03(\tR\rpeerAddresses2\\\n" +
 	"\n" +
 	"Controller\x12N\n" +
-	"\vGetPeerList\x12\x1e.controller.GetPeerListRequest\x1a\x1f.controller.GetPeerListResponseB.Z,github.com/AbhiK57/lazy-ncl/proto/controllerb\x06proto3"
+	"\vGetPeerList\x12\x1e.controller.GetPeerListRequest\x1a\x1f.controller.GetPeerListResponseB.Z,github.com/AbhiK57/Lazy-NCL/proto/controllerb\x06proto3"
 
 var (
 	file_proto_controller_proto_rawDescOnce sync.Once

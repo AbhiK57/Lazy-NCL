@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package controller;
 
-option go_package = "github.com/AbhiK57/lazy-ncl/proto/controller";
+option go_package = "github.com/AbhiK57/Lazy-NCL/proto/controller";
 
 //request to get the list of active NCL peers.
 message GetPeerListRequest {}
