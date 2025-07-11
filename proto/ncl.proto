@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package ncl;
+
+option go_package = "github.com/AbhiK57/Lazy-NCL/proto/ncl";
+
+//metdata for single record
+message Metadata {
+    string record_id = 1; //Globally unique ID for record
+    string shard_id = 2; //id of datashard for payload
+}
+
+//request to append metadata to an NCL peer
+message AppendMetadataRequest{
+    Metadata meta = 1;
+}
+
+//response to successful append
+message AppendMetadataResponse {}
+
+//request to read from specific offset
+message ReadMetadataRequest {
+    int64 offset = 1;
+}
+
+service NCLPeer {
+    //Appends entry to peers log
+    rpc AppendMetadata(AppendMetadataRequest) returns (AppendMetadataResponse);
+
+    //reads metadata entries starting at given offset.
+    rpc ReadMetadata(ReadMetadataRequest) returns (stream Metadata);
+}
+
