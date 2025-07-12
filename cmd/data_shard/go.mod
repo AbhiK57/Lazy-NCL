@@ -3,6 +3,7 @@ module github.com/AbhiK57/Lazy-NCL/cmd/data_shard
 go 1.24.4
 
 require (
+	github.com/AbhiK57/Lazy-NCL v0.0.0-20250711223441-a3501d44c3ec
 	github.com/linxGnu/grocksdb v1.10.1 // indirect
 	golang.org/x/net v0.38.0 // indirect
 	golang.org/x/sys v0.31.0 // indirect

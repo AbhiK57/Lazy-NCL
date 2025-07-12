@@ -1,3 +1,5 @@
+github.com/AbhiK57/Lazy-NCL v0.0.0-20250711223441-a3501d44c3ec h1:nwUpR72cs53sK/WP2fpIf9VnSIiU37LQyg3duk5LnQo=
+github.com/AbhiK57/Lazy-NCL v0.0.0-20250711223441-a3501d44c3ec/go.mod h1:p12P2E0qwfoamBzQ9F/t+fUNZQboQdpzoqrPGeeYlp0=
 github.com/linxGnu/grocksdb v1.10.1 h1:YX6gUcKvSC3d0s9DaqgbU+CRkZHzlELgHu1Z/kmtslg=
 github.com/linxGnu/grocksdb v1.10.1/go.mod h1:C3CNe9UYc9hlEM2pC82AqiGS3LRW537u9LFV4wIZuHk=
 golang.org/x/net v0.38.0 h1:vRMAPTMaeGqVhG5QyLJHqNDwecKTomGeqbnfZyKlBI8=
