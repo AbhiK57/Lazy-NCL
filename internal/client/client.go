@@ -133,3 +133,28 @@ func (c *Client) Append(ctx context.Context, data []byte) (string, error) {
 	//TODO: Implement quorum stuff
 	return recordID, c.waitForQuorum(ctx, dataAckChannel, nclAckChannel, errChannel)
 }
+
+func (c *Client) waitForQuorum(ctx context.Context, dataAckChannel <-chan struct{}, nclAckChannel <-chan struct{}, errChannel <-chan error) error {
+	nclAcks := 0
+	dataAck := false
+
+	//loop until quorum
+	for {
+		if dataAck && nclAck >= c.nclQuorumSize {
+			log.Printf("Quorum reached (Data: %t, Logs: %d/%d)", dataAck, nclAcks, c.nclQuorumSize)
+		}
+
+		select {
+		case <-nclAckChannel:
+			nclAcks++
+		case <-dataAckChannel:
+			dataAck = true
+		case err := <-errChannel
+			//return error on first fatal error
+			//TODO: Implement full complexity for tolerating certain errors
+			return err
+		case <-ctx.Done():
+			return fmt.Errorf("Context cancelled while waiting for quorum. Quorum Reached (Data: %t, Logs: %d/%d)", dataAck, nclAcks, c.nclQuorumSize)
+		}
+	}
+}
