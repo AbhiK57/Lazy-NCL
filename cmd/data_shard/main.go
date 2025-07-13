@@ -97,6 +97,6 @@ func main() {
 	pb.RegisterDataShardServer(s, NewServer(db))
 
 	if err := s.Serve(lis); err != nil {
-		log.Fatalf("Failed to serve: %v", err)
+		log.Fatalf("Failed to serve DB Shard on GRPC: %v", err)
 	}
 }

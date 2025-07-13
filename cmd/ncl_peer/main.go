@@ -70,6 +70,6 @@ func main() {
 	s := grpc.NewServer()
 	pb.RegisterNCLPeerServer(s, NewServer())
 	if err := s.Serve(lis); err != nil {
-		log.Fatalf("failed to serve NCL peer server on GRPC: %v", err)
+		log.Fatalf("Failed to serve NCL peer server on GRPC: %v", err)
 	}
 }

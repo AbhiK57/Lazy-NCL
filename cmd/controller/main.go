@@ -5,9 +5,11 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net"
 	"os"
 
 	pb "github.com/AbhiK57/Lazy-NCL/proto/controller"
+	"google.golang.org/grpc"
 	"gopkg.in/yaml.v3"
 )
 
@@ -43,4 +45,26 @@ func NewServer(configPath string) (*server, error) {
 func (s *server) GetPeerList(ctx context.Context, req *pb.GetPeerListRequest) (*pb.GetPeerListResponse, error) {
 	log.Println("Received GetPeerList request.")
 	return &pb.GetPeerListResponse{PeerAddresses: s.peerAddresses}, nil
+}
+
+func main() {
+	flag.Parse()
+	log.Printf("Controller service starting on port %d", *port)
+
+	s, err := NewServer(*configFile)
+	if err != nil {
+		log.Fatalf("Failed to create server: %v", err)
+	}
+
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
+	if err != nil {
+		log.Fatalf("Failed to listen: %v", err)
+	}
+
+	grpcServer := grpc.NewServer()
+	pb.RegisterControllerServer(grpcServer, s)
+
+	if err := grpcServer.Serve(lis); err != nil {
+		log.Fatalf("Failed to serve controller server on GRPC: %v", err)
+	}
 }
