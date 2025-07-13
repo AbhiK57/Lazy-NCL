@@ -8,6 +8,7 @@ import (
 	ctrlpb "github.com/AbhiK57/Lazy-NCL/proto/controller"
 	dspb "github.com/AbhiK57/Lazy-NCL/proto/datashard"
 	nclpb "github.com/AbhiK57/Lazy-NCL/proto/ncl"
+	"github.com/google/uuid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -71,4 +72,64 @@ func newClient(ctx context.Context, controllerAddr string, dataShardAddrs []stri
 		nclPeers:      nclPeers,
 		dataShards:    dataShards,
 	}, nil
+}
+
+// simple non-cryptographic hash for sharding.
+func hash(s string) uint32 {
+	h := uint32(2166136261)
+	for i := 0; i < len(s); i++ {
+		h = h ^ uint32(s[i])
+		h = h * 16777619
+	}
+	return h
+}
+
+// Performs the 1-RTT split write to data and log layers
+func (c *Client) Append(ctx context.Context, data []byte) (string, error) {
+	recordID := uuid.New().String()
+	//hash the record id
+	shardIndex := int(hash(recordID) % uint32(len(c.dataShards)))
+	targetShard := c.dataShards[shardIndex]
+	shardID := fmt.Sprintf("shard-%d", shardIndex) //TODO: get this from config
+
+	metadata := &nclpb.Metadata{
+		RecordId: recordID,
+		ShardId:  shardID,
+	}
+
+	//dispatch in parallel
+	//use channel to collect goroutine errors
+	errChannel := make(chan error, len(c.nclPeers)+1)
+	//channel to count successful log acknowledgements
+	nclAckChannel := make(chan struct{}, len(c.nclPeers))
+	//channel for the single data acknowledgement
+	dataAckChannel := make(chan struct{}, 1)
+
+	//data dispatch
+	go func() {
+		req := &dspb.PutDataRequest{RecordId: recordID, DataPayload: data}
+		_, err := targetShard.PutData(ctx, req)
+		if err != nil {
+			errChannel <- fmt.Errorf("Data path write failed: %w", err)
+			return
+		}
+		dataAckChannel <- struct{}{}
+	}()
+
+	//metadata dispatch
+	for _, peer := range c.nclPeers {
+		go func(p nclpb.NCLPeerClient) {
+			req := &nclpb.AppendMetadataRequest{Meta: metadata}
+			_, err := p.AppendMetadata(ctx, req)
+			if err != nil {
+				//some failures are expected, need to reach a quorum of successes
+				log.Printf("NCL Peer write failed: %v", err)
+				return
+			}
+			nclAckChannel <- struct{}{}
+		}(peer)
+	}
+
+	//TODO: Implement quorum stuff
+	return recordID, c.waitForQuorum(ctx, dataAckChannel, nclAckChannel, errChannel)
 }
