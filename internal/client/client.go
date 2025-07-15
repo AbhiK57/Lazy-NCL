@@ -130,7 +130,6 @@ func (c *Client) Append(ctx context.Context, data []byte) (string, error) {
 		}(peer)
 	}
 
-	//TODO: Implement quorum stuff
 	return recordID, c.waitForQuorum(ctx, dataAckChannel, nclAckChannel, errChannel)
 }
 
@@ -149,7 +148,7 @@ func (c *Client) waitForQuorum(ctx context.Context, dataAckChannel <-chan struct
 			nclAcks++
 		case <-dataAckChannel:
 			dataAck = true
-		case err := <-errChannel
+		case err := <-errChannel:
 			//return error on first fatal error
 			//TODO: Implement full complexity for tolerating certain errors
 			return err
