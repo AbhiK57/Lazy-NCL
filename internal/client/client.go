@@ -139,7 +139,7 @@ func (c *Client) waitForQuorum(ctx context.Context, dataAckChannel <-chan struct
 
 	//loop until quorum
 	for {
-		if dataAck && nclAck >= c.nclQuorumSize {
+		if dataAck && nclAcks >= c.nclQuorumSize {
 			log.Printf("Quorum reached (Data: %t, Logs: %d/%d)", dataAck, nclAcks, c.nclQuorumSize)
 		}
 
