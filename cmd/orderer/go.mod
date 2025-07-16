@@ -3,6 +3,7 @@ module github.com/AbhiK57/Lazy-NCL/cmd/orderer
 go 1.24.4
 
 require (
+	github.com/AbhiK57/Lazy-NCL v0.0.0-20250715030629-016a166a5edd
 	golang.org/x/net v0.38.0 // indirect
 	golang.org/x/sys v0.31.0 // indirect
 	golang.org/x/text v0.23.0 // indirect
