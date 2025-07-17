@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"log"
 	"sync"
@@ -38,6 +39,22 @@ func NewOrderer(nclClient nclpb.NCLPeerClient) *Orderer {
 		nclClient:   nclClient,
 		globalIndex: make(map[int64]GlobalIndexEntry),
 	}
+}
+
+func (o *Orderer) Run() {
+	ticker := time.NewTicker(*pollInterval)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		o.pollAndOrder()
+	}
+}
+
+func (o *Orderer) pollAndOrder() {
+	ctx, cancel := context.WithTimeout(context.Background(), 5 * time.Second)
+	defer cancel()
+
+	
 }
 
 func main() {
