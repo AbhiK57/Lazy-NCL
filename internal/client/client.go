@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"sort"
 
 	ctrlpb "github.com/AbhiK57/Lazy-NCL/proto/controller"
 	dspb "github.com/AbhiK57/Lazy-NCL/proto/datashard"
 	nclpb "github.com/AbhiK57/Lazy-NCL/proto/ncl"
+	ordererpb "github.com/AbhiK57/Lazy-NCL/proto/orderer"
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -17,13 +19,14 @@ import (
 type Client struct {
 	nclQuorumSize int
 	nclPeers      []nclpb.NCLPeerClient
-	dataShards    []dspb.DataShardClient
+	dataShards    map[string]dspb.DataShardClient
+	ordererClient ordererpb.OrdererClient
 	//TODO: Connect to orderer and add read path
 }
 
 //Create new Client
 
-func newClient(ctx context.Context, controllerAddr string, dataShardAddrs []string, f int) (*Client, error) {
+func newClient(ctx context.Context, controllerAddr string, dataShardAddrs []string, f int, ordererAddr string) (*Client, error) {
 	//connect to contoller
 	ctrlConn, err := grpc.NewClient(controllerAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
@@ -54,14 +57,21 @@ func newClient(ctx context.Context, controllerAddr string, dataShardAddrs []stri
 	}
 
 	//Connect to data shards
-	var dataShards []dspb.DataShardClient
+	shardsMap := make(map[string]dspb.DataShardClient)
 	for _, addr := range dataShardAddrs {
 		conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 		if err != nil {
 			return nil, fmt.Errorf("Failed to connect to data shard %s: %w", addr, err)
 		}
-		dataShards = append(dataShards, dspb.NewDataShardClient(conn))
+		shardsMap[addr] = dspb.NewDataShardClient(conn)
 	}
+
+	//connect to orderer
+	ordererConn, err := grpc.NewClient(ordererAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return nil, fmt.Errorf("Failed to connect to orderer server: %w", err)
+	}
+	ordererClient := ordererpb.NewOrdererClient(ordererConn)
 
 	if len(nclPeers) < 2*f+1 {
 		return nil, fmt.Errorf("Not enough Log peers for f=%d fault tolerance", f)
@@ -70,7 +80,8 @@ func newClient(ctx context.Context, controllerAddr string, dataShardAddrs []stri
 	return &Client{
 		nclQuorumSize: f + 1,
 		nclPeers:      nclPeers,
-		dataShards:    dataShards,
+		dataShards:    shardsMap,
+		ordererClient: ordererClient,
 	}, nil
 }
 
@@ -87,10 +98,17 @@ func hash(s string) uint32 {
 // Performs the 1-RTT split write to data and log layers
 func (c *Client) Append(ctx context.Context, data []byte) (string, error) {
 	recordID := uuid.New().String()
-	//hash the record id
-	shardIndex := int(hash(recordID) % uint32(len(c.dataShards)))
-	targetShard := c.dataShards[shardIndex]
-	shardID := fmt.Sprintf("shard-%d", shardIndex) //TODO: get this from config
+	keys := make([]string, 0, len(c.dataShards))
+	for k := range c.dataShards {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	shardIndex := int(hash(recordID) % uint32(len(keys)))
+	shardKey := keys[shardIndex]
+	targetShard := c.dataShards[shardKey]
+
+	shardID := shardKey
 
 	metadata := &nclpb.Metadata{
 		RecordId: recordID,

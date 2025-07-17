@@ -1,5 +1,7 @@
 github.com/AbhiK57/Lazy-NCL v0.0.0-20250713051717-c6cf2fe6e9e5 h1:u/a4JxGF7KKpkne3g/l+j1c/FQ/lDWYALILQJGXXEb8=
 github.com/AbhiK57/Lazy-NCL v0.0.0-20250713051717-c6cf2fe6e9e5/go.mod h1:p12P2E0qwfoamBzQ9F/t+fUNZQboQdpzoqrPGeeYlp0=
+github.com/AbhiK57/Lazy-NCL v0.0.0-20250717212711-390b8d1ed4ab h1:xoLrjnRbk4tns6ok0/ACFgcwCf0U75y0frr27TAFfLU=
+github.com/AbhiK57/Lazy-NCL v0.0.0-20250717212711-390b8d1ed4ab/go.mod h1:p12P2E0qwfoamBzQ9F/t+fUNZQboQdpzoqrPGeeYlp0=
 github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
 github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 golang.org/x/net v0.38.0 h1:vRMAPTMaeGqVhG5QyLJHqNDwecKTomGeqbnfZyKlBI8=
