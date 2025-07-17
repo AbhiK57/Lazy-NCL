@@ -51,10 +51,40 @@ func (o *Orderer) Run() {
 }
 
 func (o *Orderer) pollAndOrder() {
-	ctx, cancel := context.WithTimeout(context.Background(), 5 * time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	
+	stream, err := o.nclClient.ReadMetadata(ctx, &nclpb.ReadMetadataRequest{Offset: o.lastNCLOffset})
+
+	if err != nil {
+		log.Printf("Unable to read metadata from NCL leader: %v", err)
+		return
+	}
+
+	for {
+		metadata, err := stream.Recv()
+		if err != nil {
+			if err.Error() == "EOF" {
+				break
+			}
+			log.Printf("Error receiving from NCL stream: %v", err)
+		}
+
+		o.mu.Lock()
+
+		//TODO: Handle deduplication
+
+		seq := o.globalSequenceNum
+		o.globalIndex[seq] = GlobalIndexEntry{
+			RecordID: metadata.RecordId,
+			ShardID:  metadata.ShardId,
+		}
+
+		o.globalSequenceNum++
+		o.lastNCLOffset++
+		o.mu.Unlock()
+	}
+
 }
 
 func main() {
