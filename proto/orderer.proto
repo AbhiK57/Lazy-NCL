@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package orderer;
+
+option go_package = "github.com/AbhiK57/Lazy-NCL/proto/orderer";
+
+//resolve global log position
+message ResolvePositionRequest {
+    int64 global_position = 1;
+}
+
+//response with resolved Identifiers
+
+message ResolvePositionResponse {
+    string record_id = 1;
+    string shard_id = 2;
+}
+
+//reads from finalized global log
+service Orderer {
+    //given log position returns record and shard ids
+    rpc ResolvePosition(ResolvePositionRequest) returns (ResolvePositionResponse);
+}
+
