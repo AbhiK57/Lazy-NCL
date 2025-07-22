@@ -1,0 +1,62 @@
+version: '3.8'
+services:
+  controller:
+    build:
+      context:.
+      dockerfile: Dockerfile
+    command: go build -o /app/app./cmd/controller
+    ports:
+      - "50071:50071"
+    volumes:
+      -./config.yaml:/app/config.yaml
+
+  ncl-peer-1:
+    build:
+      context:.
+      dockerfile: Dockerfile
+    command: go build -o /app/app./cmd/ncl_peer
+    entrypoint: ["/app/app", "-port=50051"]
+
+  ncl-peer-2:
+    build:
+      context:.
+      dockerfile: Dockerfile
+    command: go build -o /app/app./cmd/ncl_peer
+    entrypoint: ["/app/app", "-port=50052"]
+
+  ncl-peer-3:
+    build:
+      context:.
+      dockerfile: Dockerfile
+    command: go build -o /app/app./cmd/ncl_peer
+    entrypoint: ["/app/app", "-port=50053"]
+
+  data-shard-1:
+    build:
+      context:.
+      dockerfile: Dockerfile
+    command: go build -o /app/app./cmd/data_shard
+    entrypoint: ["/app/app", "-port=50061", "-db_path=/data/shard1"]
+    volumes:
+      - data-shard-1-vol:/data/shard1
+
+  data-shard-2:
+    build:
+      context:.
+      dockerfile: Dockerfile
+    command: go build -o /app/app./cmd/data_shard
+    entrypoint: ["/app/app", "-port=50062", "-db_path=/data/shard2"]
+    volumes:
+      - data-shard-2-vol:/data/shard2
+
+  orderer:
+    build:
+      context:.
+      dockerfile: Dockerfile
+    command: go build -o /app/app./cmd/orderer
+    depends_on:
+      - ncl-peer-1
+
+volumes:
+  data-shard-1-vol:
+  data-shard-2-vol:
