@@ -177,7 +177,7 @@ func (c *Client) waitForQuorum(ctx context.Context, dataAckChannel <-chan struct
 }
 
 // fetch record via global log position
-func (c *Client) Read(ctx context.Context, position int64) (byte, error) {
+func (c *Client) Read(ctx context.Context, position int64) ([]byte, error) {
 	resolveReq := ordererpb.ResolvePositionRequest{GlobalPosition: position}
 	resolveResp, err := c.ordererClient.ResolvePosition(ctx, &resolveReq)
 
@@ -185,15 +185,12 @@ func (c *Client) Read(ctx context.Context, position int64) (byte, error) {
 	shardID := resolveResp.GetShardId() // e.g., "localhost:50061"
 
 	//fetc the data from the correct data shard.
-	shardClient, ok := c.dataShards
-	if !ok {
-		return 0, fmt.Errorf("unknown shard_id '%s' received from orderer", shardID)
-	}
+	shardClient := c.dataShards[shardID]
 
 	getReq := &dspb.GetDataRequest{RecordId: recordID}
 	getResp, err := shardClient.GetData(ctx, getReq)
 	if err != nil {
-		return 0, fmt.Errorf("could not get data for record %s from shard %s: %w", recordID, shardID, err)
+		return [], fmt.Errorf("could not get data for record %s from shard %s: %w", recordID, shardID, err)
 	}
 
 	log.Printf("Successfully read data for position %d (RecordID: %s)", position, recordID)
