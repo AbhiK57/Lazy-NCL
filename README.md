@@ -5,7 +5,7 @@ Lazy-NCL is my attempt at a distributed log storage system inspired by the princ
 ## Key Features
 
 *   **Decoupled Data and Metadata:** The system separates the write path into a data path for storing the actual payload and a metadata path for ordering and replication. This allows for low-latency writes and flexible data placement.
-*   **Fault Tolerance:** The metadata log is replicated across a configurable number of NCL (Network-Chain-Log) peers, using a quorum-based approach to tolerate `f` failures.
+*   **Fault Tolerance:** The metadata log is replicated across a configurable number of NCL (Near Compute Log) peers, using a quorum-based approach to tolerate `f` failures.
 *   **Horizontal Scalability:** The data storage layer is sharded, allowing for horizontal scaling of storage capacity.
 *   **Global Ordering:** A dedicated orderer component polls the metadata log to establish a global, linearizable order of all records in the system.
 *   **gRPC Communication:** All communication between system components is done using gRPC, with data structures defined using Protocol Buffers.
