@@ -21,7 +21,14 @@ type Client struct {
 	nclPeers      []nclpb.NCLPeerClient
 	dataShards    map[string]dspb.DataShardClient
 	ordererClient ordererpb.OrdererClient
+	connections   []*grpc.ClientConn
 	//TODO: Connect to orderer and add read path
+}
+
+func (c *Client) Close() {
+	for _, conn := range c.connections {
+		conn.Close()
+	}
 }
 
 //Create new Client
@@ -32,7 +39,6 @@ func newClient(ctx context.Context, controllerAddr string, dataShardAddrs []stri
 	if err != nil {
 		return nil, fmt.Errorf("Failed to connect to controller: %w", err)
 	}
-	defer ctrlConn.Close()
 	ctrlClient := ctrlpb.NewControllerClient(ctrlConn)
 
 	//get log peer list from controller
@@ -43,6 +49,8 @@ func newClient(ctx context.Context, controllerAddr string, dataShardAddrs []stri
 	nclPeerAddrs := resp.GetPeerAddresses()
 	log.Printf("Found NCL Peers: %v", nclPeerAddrs)
 
+	connections := []*grpc.ClientConn{ctrlConn}
+
 	//connect to all peers
 	var nclPeers []nclpb.NCLPeerClient
 	for _, addr := range nclPeerAddrs {
@@ -52,6 +60,7 @@ func newClient(ctx context.Context, controllerAddr string, dataShardAddrs []stri
 			return nil, fmt.Errorf("Failed to connect to log peer %s: %w", addr, err)
 		}
 
+		connections = append(connections, conn)
 		//TODO: Manage connections' lifecycle
 		nclPeers = append(nclPeers, nclpb.NewNCLPeerClient(conn))
 	}
@@ -63,6 +72,7 @@ func newClient(ctx context.Context, controllerAddr string, dataShardAddrs []stri
 		if err != nil {
 			return nil, fmt.Errorf("Failed to connect to data shard %s: %w", addr, err)
 		}
+		connections = append(connections, conn)
 		shardsMap[addr] = dspb.NewDataShardClient(conn)
 	}
 
@@ -71,6 +81,7 @@ func newClient(ctx context.Context, controllerAddr string, dataShardAddrs []stri
 	if err != nil {
 		return nil, fmt.Errorf("Failed to connect to orderer server: %w", err)
 	}
+	connections = append(connections, ordererConn)
 	ordererClient := ordererpb.NewOrdererClient(ordererConn)
 
 	if len(nclPeers) < 2*f+1 {
@@ -82,6 +93,7 @@ func newClient(ctx context.Context, controllerAddr string, dataShardAddrs []stri
 		nclPeers:      nclPeers,
 		dataShards:    shardsMap,
 		ordererClient: ordererClient,
+		connections:   connections,
 	}, nil
 }
 
@@ -159,6 +171,7 @@ func (c *Client) waitForQuorum(ctx context.Context, dataAckChannel <-chan struct
 	for {
 		if dataAck && nclAcks >= c.nclQuorumSize {
 			log.Printf("Quorum reached (Data: %t, Logs: %d/%d)", dataAck, nclAcks, c.nclQuorumSize)
+			return nil
 		}
 
 		select {
@@ -180,17 +193,23 @@ func (c *Client) waitForQuorum(ctx context.Context, dataAckChannel <-chan struct
 func (c *Client) Read(ctx context.Context, position int64) ([]byte, error) {
 	resolveReq := ordererpb.ResolvePositionRequest{GlobalPosition: position}
 	resolveResp, err := c.ordererClient.ResolvePosition(ctx, &resolveReq)
+	if err != nil {
+		return nil, fmt.Errorf("could not resolve position %d: %w", position, err)
+	}
 
 	recordID := resolveResp.GetRecordId()
 	shardID := resolveResp.GetShardId() // e.g., "localhost:50061"
 
 	//fetc the data from the correct data shard.
-	shardClient := c.dataShards[shardID]
+	shardClient, ok := c.dataShards[shardID]
+	if !ok {
+		return nil, fmt.Errorf("unknown shard ID '%s' for record %s", shardID, recordID)
+	}
 
 	getReq := &dspb.GetDataRequest{RecordId: recordID}
 	getResp, err := shardClient.GetData(ctx, getReq)
 	if err != nil {
-		return [], fmt.Errorf("could not get data for record %s from shard %s: %w", recordID, shardID, err)
+		return nil, fmt.Errorf("could not get data for record %s from shard %s: %w", recordID, shardID, err)
 	}
 
 	log.Printf("Successfully read data for position %d (RecordID: %s)", position, recordID)

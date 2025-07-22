@@ -93,6 +93,23 @@ func (o *Orderer) pollAndOrder() {
 
 }
 
+func (o *Orderer) ResolvePosition(ctx context.Context, req *ordererpb.ResolvePositionRequest) (*ordererpb.ResolvePositionResponse, error) {
+	o.mu.RLock()
+	defer o.mu.RUnlock()
+
+	entry, ok := o.globalIndex[req.GlobalPosition]
+	if !ok {
+		return nil, fmt.Errorf("global position %d not found", req.GlobalPosition)
+	}
+
+	log.Printf("Resolved position %d to RecordID %s", req.GlobalPosition, entry.RecordID)
+
+	return &ordererpb.ResolvePositionResponse{
+		RecordId: entry.RecordID,
+		ShardId:  entry.ShardID,
+	}, nil
+}
+
 func main() {
 	flag.Parse()
 
