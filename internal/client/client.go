@@ -31,8 +31,7 @@ func (c *Client) Close() {
 	}
 }
 
-//Create new Client
-
+// Create new Client
 func newClient(ctx context.Context, controllerAddr string, dataShardAddrs []string, f int, ordererAddr string) (*Client, error) {
 	//connect to contoller
 	ctrlConn, err := grpc.NewClient(controllerAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))

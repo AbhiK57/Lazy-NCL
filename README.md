@@ -1,6 +1,6 @@
 # Lazy-NCL
 
-Lazy-NCL is my attempt at a distributed log storage system inspired by the principles of LazyLog (SOSP '24) and SplitFT (EuroSys '24) from the DASSL at the University of Illinois Urbana-Champaign. This project implements a simplified version of these systems to demonstrate the core concepts of decoupling the data and metadata paths for high-performance, fault-tolerant writes.
+Lazy-NCL (Near Compute Log) is my attempt at a distributed log storage system inspired by the principles of LazyLog (SOSP '24) and SplitFT (EuroSys '24) from the DASSL at the University of Illinois Urbana-Champaign. This project implements a simplified version of these systems to demonstrate the core concepts of decoupling the data and metadata paths for high-performance, fault-tolerant writes.
 
 ## Key Features
 
