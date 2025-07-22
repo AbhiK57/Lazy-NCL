@@ -140,5 +140,5 @@ func main() {
 	}()
 
 	log.Println("Backround orderer begun. Polling NCL Leader...")
-	orderer.Run() //need to write function RUN
+	orderer.Run()
 }
