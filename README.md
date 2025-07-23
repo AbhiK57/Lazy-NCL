@@ -56,7 +56,7 @@ The system is composed of the following microservices:
 
 ## Future Work
 
-*   There are some bugs currently that I am actively working on to fix.
+*   Fix bugs (Primarily in orderer).
 *   Create a producer and consumer with the client package.
 *   Implement a more robust leader election mechanism for the NCL peers.
 *   Add support for client-side sharding and caching.
